@@ -1,0 +1,26 @@
+baseURL = "/"
+languageCode = "zh-cn"
+title = "Wenxu Zheng"
+theme = "PaperMod"
+
+[params]
+defaultTheme = "auto"
+ShowReadingTime = true
+ShowCodeCopyButtons = true
+ShowPostNavLinks = true
+
+[params.homeInfoParams]
+Title = "Hi, I'm Wenxu Zheng 👋"
+Content = "Robotics | Embodied AI | Tactile Sensing | Robot Control"
+
+[[menu.main]]
+identifier = "posts"
+name = "Blog"
+url = "/posts/"
+weight = 10
+
+[[menu.main]]
+identifier = "about"
+name = "About"
+url = "/about/"
+weight = 20
