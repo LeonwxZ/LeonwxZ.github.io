@@ -6,6 +6,48 @@
     <description>Recent content on Wenxu Zheng</description>
     <generator>Hugo</generator>
     <language>en-US</language>
+    <lastBuildDate>Tue, 15 Sep 2026 00:00:00 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Transformer</title>
+      <link>http://localhost:1313/posts/transformer/</link>
+      <pubDate>Tue, 15 Sep 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/transformer/</guid>
+      <description>&lt;h1 id=&#34;什么是注意力机制&#34;&gt;什么是注意力机制&lt;/h1&gt;
+$$
+\mathrm{Attention}(Q,K,V) =
+\mathrm{softmax}
+\left(
+\frac{QK^T}{\sqrt{d_k}}
+\right)V
+$$&lt;p&gt;注意力机制就是根据 Query 和 Key 的匹配程度，计算每个 Value 应该被关注多少，然后加权求和得到新的表示。&lt;/p&gt;
+$$
+QK^T =
+\begin{bmatrix}
+q_1\\
+q_2\\
+q_3
+\end{bmatrix}
+\begin{bmatrix}
+k_1^T &amp; k_2^T &amp; k_3^T
+\end{bmatrix}
+{}={}
+\begin{bmatrix}
+q_1k_1^T &amp; q_1k_2^T &amp; q_1k_3^T\\
+q_2k_1^T &amp; q_2k_2^T &amp; q_2k_3^T\\
+q_3k_1^T &amp; q_3k_2^T &amp; q_3k_3^T
+\end{bmatrix}
+$$&lt;p&gt;Transformer里面有三个可训练矩阵：&lt;/p&gt;
+$$
+W_Q,\ W_K,\ W_V
+$$&lt;p&gt;然后：&lt;/p&gt;
+$$
+Q=XW_Q
+$$$$
+K=XW_K
+$$$$
+V=XW_V
+$$</description>
+    </item>
   </channel>
 </rss>

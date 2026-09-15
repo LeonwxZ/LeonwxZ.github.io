@@ -3,13 +3,21 @@ locale = "en-US"
 title = "Wenxu Zheng"
 theme = "PaperMod"
 
+[markup.goldmark.extensions.passthrough]
+enable = true
+
+[markup.goldmark.extensions.passthrough.delimiters]
+block = [['\[', '\]'], ['$$', '$$']]
+inline = [['\(', '\)']]
+
 
 [params]
-
 defaultTheme = "auto"
 ShowReadingTime = true
 ShowCodeCopyButtons = true
 ShowPostNavLinks = true
+
+math = true
 
 
 [params.homeInfoParams]

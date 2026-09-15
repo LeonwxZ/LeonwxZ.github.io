@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>嵌入式系统 on Wenxu Zheng</title>
+    <link>http://localhost:1313/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%B3%BB%E7%BB%9F/</link>
+    <description>Recent content in 嵌入式系统 on Wenxu Zheng</description>
+    <generator>Hugo</generator>
+    <language>en-US</language>
+    <lastBuildDate>Tue, 15 Sep 2026 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%B3%BB%E7%BB%9F/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>网站介绍</title>
+      <link>http://localhost:1313/posts/test/</link>
+      <pubDate>Tue, 15 Sep 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/test/</guid>
+      <description>&lt;h1 id=&#34;欢迎来到我的个人网站-&#34;&gt;欢迎来到我的个人网站 👋&lt;/h1&gt;
+&lt;p&gt;创建这个网站的初衷，是记录我在机器人、人工智能以及嵌入式系统方向上的学习过程、科研进展和项目经历。&lt;/p&gt;
+&lt;p&gt;希望通过这个博客整理自己的知识，同时也与更多对机器人和人工智能感兴趣的朋友交流。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;为什么写这个网站&#34;&gt;为什么写这个网站？&lt;/h1&gt;
+&lt;p&gt;机器人是一个交叉领域，需要综合多个方向的知识：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;控制理论&lt;/li&gt;
+&lt;li&gt;人工智能&lt;/li&gt;
+&lt;li&gt;嵌入式开发&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;学习过程中，我希望通过博客记录：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;学习笔记&lt;/li&gt;
+&lt;li&gt;算法理解&lt;/li&gt;
+&lt;li&gt;项目开发过程&lt;/li&gt;
+&lt;li&gt;科研思考&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;希望未来能够不断探索机器人与人工智能的结合，构建更加智能的机器人系统。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;开始探索吧-&#34;&gt;开始探索吧 🤖&lt;/h1&gt;
+&lt;p&gt;欢迎来到我的个人网站！&lt;/p&gt;
+&lt;p&gt;未来我会持续分享机器人、人工智能和嵌入式系统相关的学习记录。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
