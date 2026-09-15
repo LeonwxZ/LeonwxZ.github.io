@@ -1,0 +1,92 @@
+.main {
+
+    max-width: 1000px !important;
+
+}
+
+.header {
+
+    max-width: 1000px !important;
+
+}
+
+.first-entry {
+
+    min-height: auto !important;
+
+    margin-top: 0px;
+
+    margin-bottom: 20px;
+
+}
+
+
+.home-info {
+
+    max-width: 100% !important;
+
+}
+
+.home-info .entry-header h1 {
+
+    font-size: 48px;
+
+}
+
+.home-info .entry-content {
+
+    font-size: 18px;
+
+    line-height: 1.8;
+
+}
+
+.post-entry {
+
+    width: 100% !important;
+
+    max-width: 1000px !important;
+
+}
+
+
+.post-entry:hover {
+
+    transform: translateY(-3px);
+
+}
+
+.first-entry {
+
+    padding-top: 0px !important;
+
+    padding-bottom: 0px !important;
+
+}
+
+.footer {
+
+    max-width: 1000px;
+
+}
+
+.header {
+    max-width: 1000px !important;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.logo {
+    font-size: 26px;
+}
+
+#menu {
+    gap: 25px;
+}
+
+.post-content p {
+    text-align: justify;
+    text-justify: inter-word;
+}

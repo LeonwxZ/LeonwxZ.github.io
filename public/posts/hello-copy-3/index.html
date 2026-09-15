@@ -1,16 +1,27 @@
 <!DOCTYPE html>
 <html lang="en" dir="auto" data-theme="auto">
 
-<head>
-	<meta name="generator" content="Hugo 0.165.0"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="noindex, nofollow">
-<title>Wenxu Zheng</title>
+<title>我的第一篇博客 | Wenxu Zheng</title>
+<meta name="keywords" content="">
+<meta name="description" content="Hello World
+欢迎来到我的个人博客。
+这里主要记录我的学习和研究内容：
 
-<meta name="description" content="">
+Robotics
+Embodied AI
+Robot Control
+Tactile Sensing
+Embedded Systems
+
+Hello Robot
+print(&#34;Hello, Robot!&#34;)
+">
 <meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/">
+<link rel="canonical" href="http://localhost:1313/posts/hello-copy-3/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.537afd525c5732ed7686706ecaad11b228f380fc589c2bd102c204f37b3c28ce.css" integrity="sha256-U3r9UlxXMu12hnBuyq0RsijzgPxYnCvRAsIE83s8KM4=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
@@ -19,8 +30,7 @@
 <link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/index.xml" title="rss">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/hello-copy-3/">
 <noscript>
     <style>
         #theme-toggle,
@@ -68,7 +78,7 @@
 
 </script>
 </head>
-<body class="list" id="top">
+<body id="top">
     <header class="header">
     <nav class="header-nav">
         <div class="logo">
@@ -108,7 +118,7 @@
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/blogs/" title="Blog">
+                <a href="http://localhost:1313/posts/" title="Blog">
                     <span>Blog</span>
                 </a>
             </li>
@@ -120,21 +130,47 @@
         </ul>
     </nav>
 </header>
-<main class="main"> 
-<article class="first-entry home-info">
-    <header class="entry-header">
-        <h1>Hi, I&rsquo;m Wenxu Zheng 👋</h1>
-    </header>
-    <div class="entry-content md-content">
-        
-        <p>Robotics | Embodied AI | Embedded Systems</p>
+<main class="main">
 
-    </div>
-    <footer class="entry-footer">
-        <div class="social-icons" >
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      我的第一篇博客
+    </h1>
+    <div class="post-meta">
+
+<span title='2026-09-15 00:00:00 +0000 UTC'>September 15, 2026</span>&nbsp;·&nbsp;<span>1 min</span>
+
 </div>
+  </header> 
+  <div class="post-content md-content"><h1 id="hello-world">Hello World<a hidden class="anchor" aria-hidden="true" href="#hello-world">#</a></h1>
+<p>欢迎来到我的个人博客。</p>
+<p>这里主要记录我的学习和研究内容：</p>
+<ul>
+<li>Robotics</li>
+<li>Embodied AI</li>
+<li>Robot Control</li>
+<li>Tactile Sensing</li>
+<li>Embedded Systems</li>
+</ul>
+<h2 id="hello-robot">Hello Robot<a hidden class="anchor" aria-hidden="true" href="#hello-robot">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;Hello, Robot!&#34;</span>)
+</span></span></code></pre></div>
 
-    </footer>
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="next" href="http://localhost:1313/posts/hello-copy-4/">
+    <span class="title">Next »</span>
+    <span>我的第一篇博客</span>
+  </a>
+</nav>
+
+  </footer>
 </article>
     </main>
     
@@ -215,6 +251,53 @@
         }
     })
 
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
 </script>
 </body>
 

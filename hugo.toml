@@ -1,38 +1,53 @@
-baseURL = "https://leonwxz.github.io/"
-locale = "zh-CN"
+baseURL = "https://LeonwxZ.github.io/"
+locale = "en-US"
 title = "Wenxu Zheng"
 theme = "PaperMod"
 
+
 [params]
+
 defaultTheme = "auto"
 ShowReadingTime = true
 ShowCodeCopyButtons = true
 ShowPostNavLinks = true
 
+
 [params.homeInfoParams]
+
 Title = "Hi, I'm Wenxu Zheng 👋"
+
 Content = """
-I received my B.Eng. degree in Automation from Guangdong University of Technology and am currently pursuing my master's degree in Electronic Information at Sun Yat-sen University.
-
-My research interests include robotics, embodied AI, perception, control, and planning. I enjoy exploring intelligent robotic systems, learning new technologies, and sharing my projects and research along the way. Welcome to my website!
-
-**Embedded Systems** (MCU & Linux) · **Robotics** (Perception, Control & Planning) · **Embodied AI** (Imitation Learning & Reinforcement Learning)
+Robotics | Embodied AI | Embedded Systems
 """
 
+
 [[menu.main]]
-identifier = "papers"
-name = "论文"
+
+identifier = "publications"
+name = "Publications"
 url = "/papers/"
 weight = 10
 
+
 [[menu.main]]
+
 identifier = "projects"
-name = "项目"
+name = "Projects"
 url = "/projects/"
 weight = 20
 
+
 [[menu.main]]
-identifier = "posts"
-name = "博客"
-url = "/posts/"
+
+identifier = "blog"
+name = "Blog"
+url = "/Blogs/"
 weight = 30
+
+
+[[menu.main]]
+
+identifier = "about"
+name = "About"
+url = "/about/"
+weight = 40
