@@ -150,19 +150,42 @@
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">Transformer
+    <h2 class="entry-hint-parent">Linux System Programming
     </h2>
   </header>
   <div class="entry-content">
-    <p>什么是注意力机制 $$ \mathrm{Attention}(Q,K,V) = \mathrm{softmax} \left( \frac{QK^T}{\sqrt{d_k}} \right)V $$注意力机制就是根据 Query 和 Key 的匹配程度，计算每个 Value 应该被关注多少，然后加权求和得到新的表示。
+    <p> 适合：已经安装好 WSL2，但没系统学过 Linux、嵌入式或计算机系统的初学者。
+环境：Windows &#43; WSL2 &#43; Ubuntu。
+目标：掌握文件IO、系统调用、进程/线程、互斥锁、信号量、共享内存、条件变量、死锁、TCP/UDP Socket、select 和 epoll。
+1. 学习路线 建议按这个顺序学习：
+Linux 基本命令 → C &#43; GCC → 文件描述符 fd → 标准 IO / 系统调用 → open/read/write/close → 进程 → 线程 → mutex → 条件变量 → semaphore → 共享内存 → 死锁 → TCP/UDP → socket → select → epoll 2. 准备 WSL2 开发环境 打开 Ubuntu，或者 PowerShell 输入：
+wsl 进入 WSL 后：
+sudo apt update sudo apt install -y build-essential gdb vim nano tree strace lsof net-tools 检查：
+...</p>
+  </div>
+  <footer class="entry-footer">
+
+<span title='2026-09-20 00:00:00 +0000 UTC'>September 20, 2026</span>&nbsp;·&nbsp;<span>8 min</span></footer>
+  <a class="entry-link" aria-label="post link to Linux System Programming" href="http://localhost:1313/posts/linux-system-programming/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Embodied AI
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>什么是注意力机制？ $$ \mathrm{Attention}(Q,K,V) = \mathrm{softmax} \left( \frac{QK^T}{\sqrt{d_k}} \right)V $$注意力机制就是根据 Query 和 Key 的匹配程度，计算每个 Value 应该被关注多少，然后加权求和得到新的表示。
 $$ QK^T = \begin{bmatrix} q_1\\ q_2\\ q_3 \end{bmatrix} \begin{bmatrix} k_1^T &amp; k_2^T &amp; k_3^T \end{bmatrix} {}={} \begin{bmatrix} q_1k_1^T &amp; q_1k_2^T &amp; q_1k_3^T\\ q_2k_1^T &amp; q_2k_2^T &amp; q_2k_3^T\\ q_3k_1^T &amp; q_3k_2^T &amp; q_3k_3^T \end{bmatrix} $$Transformer里面有三个可训练矩阵：
 $$ W_Q,\ W_K,\ W_V $$然后：
-$$ Q=XW_Q $$$$ K=XW_K $$$$ V=XW_V $$</p>
+$$ Q=XW_Q $$$$ K=XW_K $$$$ V=XW_V $$$X$是原始信息，$W_K、W_V、W_Q$是三个不同观察方式，$Q$：我想找什么特征、$K$：我有什么特征可以被别人找到、$V$：我要传递什么信息，$d_k$是特征的维度。
+$$ \mathrm{Attention}(Q,K,V) = \mathrm{softmax} \left( \frac{(XW_Q)(XW_K)^T}{\sqrt{d_k}} \right)V = \mathrm{softmax} \left( \frac{X(W_Q{W_K}^T)X^T}{\sqrt{d_k}} \right)V $$令 $M=W_QW_K^T$，则注意力机制可以表示为：
+...</p>
   </div>
   <footer class="entry-footer">
 
 <span title='2026-09-15 00:00:00 +0000 UTC'>September 15, 2026</span>&nbsp;·&nbsp;<span>1 min</span></footer>
-  <a class="entry-link" aria-label="post link to Transformer" href="http://localhost:1313/posts/transformer/"></a>
+  <a class="entry-link" aria-label="post link to Embodied AI" href="http://localhost:1313/posts/embodied-ai/"></a>
 </article>
     </main>
     

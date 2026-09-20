@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Linux System Programming | Wenxu Zheng</title>
+<meta name="keywords" content="">
+<meta name="description" content="
+适合：已经安装好 WSL2，但没系统学过 Linux、嵌入式或计算机系统的初学者。
+环境：Windows &#43; WSL2 &#43; Ubuntu。
+目标：掌握文件IO、系统调用、进程/线程、互斥锁、信号量、共享内存、条件变量、死锁、TCP/UDP Socket、select 和 epoll。
+
+
+1. 学习路线
+建议按这个顺序学习：
+Linux 基本命令
+→ C &#43; GCC
+→ 文件描述符 fd
+→ 标准 IO / 系统调用
+→ open/read/write/close
+→ 进程
+→ 线程
+→ mutex
+→ 条件变量
+→ semaphore
+→ 共享内存
+→ 死锁
+→ TCP/UDP
+→ socket
+→ select
+→ epoll
+
+2. 准备 WSL2 开发环境
+打开 Ubuntu，或者 PowerShell 输入：
+wsl
+进入 WSL 后：
+sudo apt update
+sudo apt install -y build-essential gdb vim nano tree strace lsof net-tools
+检查：">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/linux-system-programming/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.537afd525c5732ed7686706ecaad11b228f380fc589c2bd102c204f37b3c28ce.css" integrity="sha256-U3r9UlxXMu12hnBuyq0RsijzgPxYnCvRAsIE83s8KM4=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/linux-system-programming/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\(', '\)']],
+      displayMath: [['$$', '$$'], ['\[', '\]']]
+    }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="header-nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Wenxu Zheng (Alt + H)">Wenxu Zheng</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" class="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu" class="menu">
+            <li>
+                <a href="http://localhost:1313/papers/" title="Publications">
+                    <span>Publications</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/blogs/" title="Blog">
+                    <span>Blog</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Linux System Programming
+    </h1>
+    <div class="post-meta">
+
+<span title='2026-09-20 00:00:00 +0000 UTC'>September 20, 2026</span>&nbsp;·&nbsp;<span>8 min</span>
+
+</div>
+  </header> 
+  <div class="post-content md-content"><blockquote>
+<p>适合：已经安装好 WSL2，但没系统学过 Linux、嵌入式或计算机系统的初学者。<br>
+环境：Windows + WSL2 + Ubuntu。<br>
+目标：掌握文件IO、系统调用、进程/线程、互斥锁、信号量、共享内存、条件变量、死锁、TCP/UDP Socket、<code>select</code> 和 <code>epoll</code>。</p>
+</blockquote>
+<hr>
+<h1 id="1-学习路线">1. 学习路线<a hidden class="anchor" aria-hidden="true" href="#1-学习路线">#</a></h1>
+<p>建议按这个顺序学习：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Linux 基本命令
+</span></span><span style="display:flex;"><span>→ C + GCC
+</span></span><span style="display:flex;"><span>→ 文件描述符 fd
+</span></span><span style="display:flex;"><span>→ 标准 IO / 系统调用
+</span></span><span style="display:flex;"><span>→ open/read/write/close
+</span></span><span style="display:flex;"><span>→ 进程
+</span></span><span style="display:flex;"><span>→ 线程
+</span></span><span style="display:flex;"><span>→ mutex
+</span></span><span style="display:flex;"><span>→ 条件变量
+</span></span><span style="display:flex;"><span>→ semaphore
+</span></span><span style="display:flex;"><span>→ 共享内存
+</span></span><span style="display:flex;"><span>→ 死锁
+</span></span><span style="display:flex;"><span>→ TCP/UDP
+</span></span><span style="display:flex;"><span>→ socket
+</span></span><span style="display:flex;"><span>→ select
+</span></span><span style="display:flex;"><span>→ epoll
+</span></span></code></pre></div><hr>
+<h1 id="2-准备-wsl2-开发环境">2. 准备 WSL2 开发环境<a hidden class="anchor" aria-hidden="true" href="#2-准备-wsl2-开发环境">#</a></h1>
+<p>打开 Ubuntu，或者 PowerShell 输入：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>wsl
+</span></span></code></pre></div><p>进入 WSL 后：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt update
+</span></span><span style="display:flex;"><span>sudo apt install -y build-essential gdb vim nano tree strace lsof net-tools
+</span></span></code></pre></div><p>检查：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc --version
+</span></span><span style="display:flex;"><span>gdb --version
+</span></span></code></pre></div><p>建立学习目录：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p ~/linux_system_study
+</span></span><span style="display:flex;"><span>cd ~/linux_system_study
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mkdir 01_basic
+</span></span><span style="display:flex;"><span>mkdir 02_file_io
+</span></span><span style="display:flex;"><span>mkdir 03_process
+</span></span><span style="display:flex;"><span>mkdir 04_thread
+</span></span><span style="display:flex;"><span>mkdir 05_mutex
+</span></span><span style="display:flex;"><span>mkdir 06_condition
+</span></span><span style="display:flex;"><span>mkdir 07_semaphore
+</span></span><span style="display:flex;"><span>mkdir 08_shared_memory
+</span></span><span style="display:flex;"><span>mkdir 09_tcp
+</span></span><span style="display:flex;"><span>mkdir 10_udp
+</span></span><span style="display:flex;"><span>mkdir 11_select
+</span></span><span style="display:flex;"><span>mkdir 12_epoll
+</span></span></code></pre></div><p>查看：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tree
+</span></span></code></pre></div><hr>
+<h1 id="3-先掌握最基本的-linux-命令">3. 先掌握最基本的 Linux 命令<a hidden class="anchor" aria-hidden="true" href="#3-先掌握最基本的-linux-命令">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pwd                 <span style="color:#75715e"># 当前目录</span>
+</span></span><span style="display:flex;"><span>ls                  <span style="color:#75715e"># 查看文件</span>
+</span></span><span style="display:flex;"><span>ls -l               <span style="color:#75715e"># 详细查看</span>
+</span></span><span style="display:flex;"><span>cd dir              <span style="color:#75715e"># 进入目录</span>
+</span></span><span style="display:flex;"><span>cd ..               <span style="color:#75715e"># 返回上一级</span>
+</span></span><span style="display:flex;"><span>cd ~                <span style="color:#75715e"># 回到用户目录</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mkdir test          <span style="color:#75715e"># 创建目录</span>
+</span></span><span style="display:flex;"><span>touch a.txt         <span style="color:#75715e"># 创建文件</span>
+</span></span><span style="display:flex;"><span>cp a.txt b.txt      <span style="color:#75715e"># 复制</span>
+</span></span><span style="display:flex;"><span>mv a.txt b.txt      <span style="color:#75715e"># 移动/重命名</span>
+</span></span><span style="display:flex;"><span>rm a.txt            <span style="color:#75715e"># 删除文件</span>
+</span></span><span style="display:flex;"><span>rm -r dir           <span style="color:#75715e"># 删除目录</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cat file.txt        <span style="color:#75715e"># 查看文件</span>
+</span></span><span style="display:flex;"><span>grep <span style="color:#e6db74">&#34;abc&#34;</span> file.txt <span style="color:#75715e"># 搜索文本</span>
+</span></span><span style="display:flex;"><span>ps aux              <span style="color:#75715e"># 查看进程</span>
+</span></span><span style="display:flex;"><span>top                 <span style="color:#75715e"># 查看 CPU/内存</span>
+</span></span><span style="display:flex;"><span>nano file.c         <span style="color:#75715e"># 编辑文件</span>
+</span></span></code></pre></div><hr>
+<h1 id="4-第一个-linux-c-程序">4. 第一个 Linux C 程序<a hidden class="anchor" aria-hidden="true" href="#4-第一个-linux-c-程序">#</a></h1>
+<p>进入：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ~/linux_system_study/01_basic
+</span></span><span style="display:flex;"><span>nano hello.c
+</span></span></code></pre></div><p>输入：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Hello Linux!</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>编译：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -Wall -Wextra -g hello.c -o hello
+</span></span></code></pre></div><p>运行：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./hello
+</span></span></code></pre></div><p>以后建议统一这样编译：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -Wall -Wextra -g main.c -o main
+</span></span></code></pre></div><p>其中：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>-Wall   打开常见警告
+</span></span><span style="display:flex;"><span>-Wextra 打开更多警告
+</span></span><span style="display:flex;"><span>-g      加入 GDB 调试信息
+</span></span></code></pre></div><hr>
+<h1 id="5-linux-最重要的概念之一文件描述符-fd">5. Linux 最重要的概念之一：文件描述符 fd<a hidden class="anchor" aria-hidden="true" href="#5-linux-最重要的概念之一文件描述符-fd">#</a></h1>
+<p>Linux 中很多资源都可以用一个整数表示：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>文件
+</span></span><span style="display:flex;"><span>Socket
+</span></span><span style="display:flex;"><span>管道
+</span></span><span style="display:flex;"><span>设备
+</span></span><span style="display:flex;"><span>    ↓
+</span></span><span style="display:flex;"><span>文件描述符 fd
+</span></span></code></pre></div><p>例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> fd <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>;
+</span></span></code></pre></div><p>可以理解为：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>3 → 某个已经打开的资源
+</span></span></code></pre></div><p>程序启动后默认有：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>0 → stdin
+</span></span><span style="display:flex;"><span>1 → stdout
+</span></span><span style="display:flex;"><span>2 → stderr
+</span></span></code></pre></div><p>也就是：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>标准输入
+</span></span><span style="display:flex;"><span>标准输出
+</span></span><span style="display:flex;"><span>标准错误
+</span></span></code></pre></div><hr>
+<h1 id="6-标准-io-与系统调用-io">6. 标准 IO 与系统调用 IO<a hidden class="anchor" aria-hidden="true" href="#6-标准-io-与系统调用-io">#</a></h1>
+<h2 id="61-标准-io">6.1 标准 IO<a hidden class="anchor" aria-hidden="true" href="#61-标准-io">#</a></h2>
+<p>属于 C 标准库：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">fopen</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fread</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fwrite</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fclose</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">printf</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fprintf</span>()
+</span></span></code></pre></div><p>主要使用：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>FILE <span style="color:#f92672">*</span>
+</span></span></code></pre></div><p>例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>FILE <span style="color:#f92672">*</span>fp <span style="color:#f92672">=</span> <span style="color:#a6e22e">fopen</span>(<span style="color:#e6db74">&#34;test.txt&#34;</span>, <span style="color:#e6db74">&#34;w&#34;</span>);
+</span></span></code></pre></div><h2 id="62-系统调用-io">6.2 系统调用 IO<a hidden class="anchor" aria-hidden="true" href="#62-系统调用-io">#</a></h2>
+<p>Linux 常用系统调用：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">open</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">read</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">write</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">close</span>()
+</span></span></code></pre></div><p>主要使用：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> fd
+</span></span></code></pre></div><p>例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">open</span>(<span style="color:#e6db74">&#34;test.txt&#34;</span>, O_RDONLY);
+</span></span></code></pre></div><h2 id="63-二者关系">6.3 二者关系<a hidden class="anchor" aria-hidden="true" href="#63-二者关系">#</a></h2>
+<p>可以粗略理解：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>你的程序
+</span></span><span style="display:flex;"><span>   ↓
+</span></span><span style="display:flex;"><span>fwrite()
+</span></span><span style="display:flex;"><span>   ↓
+</span></span><span style="display:flex;"><span>C 标准库缓冲区
+</span></span><span style="display:flex;"><span>   ↓
+</span></span><span style="display:flex;"><span>write()
+</span></span><span style="display:flex;"><span>   ↓
+</span></span><span style="display:flex;"><span>Linux 内核
+</span></span></code></pre></div><p>标准 IO 往往有缓冲区，因此可以减少系统调用次数。</p>
+<hr>
+<h1 id="7-open--read--write--close">7. open / read / write / close<a hidden class="anchor" aria-hidden="true" href="#7-open--read--write--close">#</a></h1>
+<p>进入：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ~/linux_system_study/02_file_io
+</span></span></code></pre></div><h2 id="71-open">7.1 open<a hidden class="anchor" aria-hidden="true" href="#71-open">#</a></h2>
+<p>头文件：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;fcntl.h&gt;</span><span style="color:#75715e">
+</span></span></span></code></pre></div><p>例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">open</span>(<span style="color:#e6db74">&#34;test.txt&#34;</span>, O_RDONLY);
+</span></span></code></pre></div><p>常见标志：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>O_RDONLY  只读
+</span></span><span style="display:flex;"><span>O_WRONLY  只写
+</span></span><span style="display:flex;"><span>O_RDWR    读写
+</span></span><span style="display:flex;"><span>O_CREAT   不存在就创建
+</span></span><span style="display:flex;"><span>O_TRUNC   打开后清空
+</span></span><span style="display:flex;"><span>O_APPEND  追加
+</span></span></code></pre></div><p>例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">open</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;test.txt&#34;</span>,
+</span></span><span style="display:flex;"><span>    O_WRONLY <span style="color:#f92672">|</span> O_CREAT <span style="color:#f92672">|</span> O_TRUNC,
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">0644</span>
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><hr>
+<h2 id="72-write">7.2 write<a hidden class="anchor" aria-hidden="true" href="#72-write">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">ssize_t</span> <span style="color:#a6e22e">write</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> fd,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>buf,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">size_t</span> count
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><p>例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">char</span> msg[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;hello</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">write</span>(fd, msg, <span style="color:#ae81ff">6</span>);
+</span></span></code></pre></div><hr>
+<h2 id="73-read">7.3 read<a hidden class="anchor" aria-hidden="true" href="#73-read">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">ssize_t</span> <span style="color:#a6e22e">read</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> fd,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>buf,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">size_t</span> count
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><p>返回值：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>&gt; 0  读取到的数据字节数
+</span></span><span style="display:flex;"><span>= 0  到达 EOF
+</span></span><span style="display:flex;"><span>&lt; 0  出错
+</span></span></code></pre></div><hr>
+<h2 id="74-close">7.4 close<a hidden class="anchor" aria-hidden="true" href="#74-close">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">close</span>(fd);
+</span></span></code></pre></div><p>用完文件描述符后要关闭。</p>
+<hr>
+<h1 id="8-文件写入实验">8. 文件写入实验<a hidden class="anchor" aria-hidden="true" href="#8-文件写入实验">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;fcntl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;unistd.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">open</span>(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;test.txt&#34;</span>,
+</span></span><span style="display:flex;"><span>        O_WRONLY <span style="color:#f92672">|</span> O_CREAT <span style="color:#f92672">|</span> O_TRUNC,
+</span></span><span style="display:flex;"><span>        <span style="color:#ae81ff">0644</span>
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(fd <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;open&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>msg <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Hello Linux System Call!</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">ssize_t</span> n <span style="color:#f92672">=</span> <span style="color:#a6e22e">write</span>(fd, msg, <span style="color:#a6e22e">strlen</span>(msg));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(n <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;write&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">close</span>(fd);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">close</span>(fd);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>编译运行：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -Wall -Wextra -g write_demo.c -o write_demo
+</span></span><span style="display:flex;"><span>./write_demo
+</span></span><span style="display:flex;"><span>cat test.txt
+</span></span></code></pre></div><p>用 <code>strace</code> 观察系统调用：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>strace -e trace<span style="color:#f92672">=</span>openat,write,close ./write_demo
+</span></span></code></pre></div><hr>
+<h1 id="9-文件读取实验">9. 文件读取实验<a hidden class="anchor" aria-hidden="true" href="#9-文件读取实验">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;fcntl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;unistd.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">open</span>(<span style="color:#e6db74">&#34;test.txt&#34;</span>, O_RDONLY);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(fd <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;open&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">128</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">ssize_t</span> n <span style="color:#f92672">=</span> <span style="color:#a6e22e">read</span>(fd, buf, <span style="color:#66d9ef">sizeof</span>(buf) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(n <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;read&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">close</span>(fd);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    buf[n] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Read %zd bytes:</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">%s&#34;</span>, n, buf);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">close</span>(fd);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<h1 id="10-必做项目文件复制器">10. 必做项目：文件复制器<a hidden class="anchor" aria-hidden="true" href="#10-必做项目文件复制器">#</a></h1>
+<p>目标：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./copy source.txt target.txt
+</span></span></code></pre></div><p>只能使用：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>open
+</span></span><span style="display:flex;"><span>read
+</span></span><span style="display:flex;"><span>write
+</span></span><span style="display:flex;"><span>close
+</span></span></code></pre></div><p>核心流程：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>open(src)
+</span></span><span style="display:flex;"><span>open(dst)
+</span></span><span style="display:flex;"><span>   ↓
+</span></span><span style="display:flex;"><span>while(read(src))
+</span></span><span style="display:flex;"><span>   ↓
+</span></span><span style="display:flex;"><span>write(dst)
+</span></span><span style="display:flex;"><span>   ↓
+</span></span><span style="display:flex;"><span>close
+</span></span></code></pre></div><hr>
+<h1 id="11-进程">11. 进程<a hidden class="anchor" aria-hidden="true" href="#11-进程">#</a></h1>
+<p>程序和进程不同：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>程序 = 磁盘上的文件
+</span></span><span style="display:flex;"><span>进程 = 正在运行的程序实例
+</span></span></code></pre></div><p>查看进程：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ps aux
+</span></span></code></pre></div><p>每个进程都有：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>PID
+</span></span></code></pre></div><p>获取 PID：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;unistd.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;PID = %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">getpid</span>());
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<h1 id="12-fork-创建子进程">12. fork 创建子进程<a hidden class="anchor" aria-hidden="true" href="#12-fork-创建子进程">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;unistd.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">pid_t</span> pid <span style="color:#f92672">=</span> <span style="color:#a6e22e">fork</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(pid <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;fork&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(pid <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;child, PID=%d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">getpid</span>());
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;parent, PID=%d, child=%d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">getpid</span>(),
+</span></span><span style="display:flex;"><span>            pid
+</span></span><span style="display:flex;"><span>        );
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>记住：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>pid &lt; 0  创建失败
+</span></span><span style="display:flex;"><span>pid = 0  当前是子进程
+</span></span><span style="display:flex;"><span>pid &gt; 0  当前是父进程
+</span></span></code></pre></div><hr>
+<h1 id="13-wait-等待子进程">13. wait 等待子进程<a hidden class="anchor" aria-hidden="true" href="#13-wait-等待子进程">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/wait.h&gt;</span><span style="color:#75715e">
+</span></span></span></code></pre></div><p>父进程：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">wait</span>(NULL);
+</span></span></code></pre></div><p>表示：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>等子进程结束后再继续
+</span></span></code></pre></div><hr>
+<h1 id="14-线程">14. 线程<a hidden class="anchor" aria-hidden="true" href="#14-线程">#</a></h1>
+<p>一个进程内部可以有多个线程：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>进程
+</span></span><span style="display:flex;"><span>├── 线程1
+</span></span><span style="display:flex;"><span>├── 线程2
+</span></span><span style="display:flex;"><span>└── 线程3
+</span></span></code></pre></div><p>线程共享：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>代码
+</span></span><span style="display:flex;"><span>全局变量
+</span></span><span style="display:flex;"><span>堆
+</span></span><span style="display:flex;"><span>文件描述符
+</span></span></code></pre></div><p>每个线程有自己的：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>栈
+</span></span><span style="display:flex;"><span>寄存器
+</span></span><span style="display:flex;"><span>线程状态
+</span></span></code></pre></div><p>核心区别：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>进程之间地址空间通常独立
+</span></span><span style="display:flex;"><span>同一进程内线程共享大量资源
+</span></span></code></pre></div><hr>
+<h1 id="15-pthread-创建线程">15. pthread 创建线程<a hidden class="anchor" aria-hidden="true" href="#15-pthread-创建线程">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;pthread.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">worker</span>(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>arg)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">void</span>)arg;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;worker running</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">pthread_t</span> tid;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pthread_create</span>(
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&amp;</span>tid,
+</span></span><span style="display:flex;"><span>        NULL,
+</span></span><span style="display:flex;"><span>        worker,
+</span></span><span style="display:flex;"><span>        NULL
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pthread_join</span>(tid, NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>编译：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc thread_demo.c -o thread_demo -pthread
+</span></span></code></pre></div><hr>
+<h1 id="16-race-condition">16. Race Condition<a hidden class="anchor" aria-hidden="true" href="#16-race-condition">#</a></h1>
+<p>假设：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> count <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span></code></pre></div><p>两个线程都执行：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>count<span style="color:#f92672">++</span>;
+</span></span></code></pre></div><p><code>count++</code> 可以粗略理解成：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>读取 count
+</span></span><span style="display:flex;"><span>加 1
+</span></span><span style="display:flex;"><span>写回 count
+</span></span></code></pre></div><p>可能出现：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>A 读取 0
+</span></span><span style="display:flex;"><span>B 读取 0
+</span></span><span style="display:flex;"><span>A 写入 1
+</span></span><span style="display:flex;"><span>B 写入 1
+</span></span></code></pre></div><p>最后结果：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>1
+</span></span></code></pre></div><p>而不是 2。</p>
+<p>这叫：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Race Condition
+</span></span></code></pre></div><hr>
+<h1 id="17-mutex-互斥锁">17. Mutex 互斥锁<a hidden class="anchor" aria-hidden="true" href="#17-mutex-互斥锁">#</a></h1>
+<p>定义：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">pthread_mutex_t</span> mutex <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>    PTHREAD_MUTEX_INITIALIZER;
+</span></span></code></pre></div><p>加锁：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">pthread_mutex_lock</span>(<span style="color:#f92672">&amp;</span>mutex);
+</span></span></code></pre></div><p>解锁：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">pthread_mutex_unlock</span>(<span style="color:#f92672">&amp;</span>mutex);
+</span></span></code></pre></div><p>例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">pthread_mutex_lock</span>(<span style="color:#f92672">&amp;</span>mutex);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>count<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pthread_mutex_unlock</span>(<span style="color:#f92672">&amp;</span>mutex);
+</span></span></code></pre></div><p>这段被保护的代码叫：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>临界区
+</span></span></code></pre></div><hr>
+<h1 id="18-mutex-完整例子">18. Mutex 完整例子<a hidden class="anchor" aria-hidden="true" href="#18-mutex-完整例子">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;pthread.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">long</span> <span style="color:#66d9ef">long</span> count <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">pthread_mutex_t</span> mutex <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>    PTHREAD_MUTEX_INITIALIZER;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">worker</span>(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>arg)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">void</span>)arg;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">1000000</span>; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">pthread_mutex_lock</span>(<span style="color:#f92672">&amp;</span>mutex);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        count<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">pthread_mutex_unlock</span>(<span style="color:#f92672">&amp;</span>mutex);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">pthread_t</span> t1, t2;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pthread_create</span>(<span style="color:#f92672">&amp;</span>t1, NULL, worker, NULL);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pthread_create</span>(<span style="color:#f92672">&amp;</span>t2, NULL, worker, NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pthread_join</span>(t1, NULL);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pthread_join</span>(t2, NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;count = %lld</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, count);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pthread_mutex_destroy</span>(<span style="color:#f92672">&amp;</span>mutex);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<h1 id="19-死锁">19. 死锁<a hidden class="anchor" aria-hidden="true" href="#19-死锁">#</a></h1>
+<p>经典情况：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>线程 A：
+</span></span><span style="display:flex;"><span>拿 lock1
+</span></span><span style="display:flex;"><span>等 lock2
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>线程 B：
+</span></span><span style="display:flex;"><span>拿 lock2
+</span></span><span style="display:flex;"><span>等 lock1
+</span></span></code></pre></div><p>双方永远等待。</p>
+<p>避免死锁最常见方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>1. 固定加锁顺序
+</span></span><span style="display:flex;"><span>2. 减少同时持有多个锁
+</span></span><span style="display:flex;"><span>3. 临界区尽量短
+</span></span><span style="display:flex;"><span>4. 必要时使用 trylock
+</span></span></code></pre></div><p>最重要：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>所有线程统一锁顺序
+</span></span></code></pre></div><hr>
+<h1 id="20-条件变量">20. 条件变量<a hidden class="anchor" aria-hidden="true" href="#20-条件变量">#</a></h1>
+<p>错误的等待方式：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">while</span>(<span style="color:#f92672">!</span>ready)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这会一直占 CPU。</p>
+<p>条件变量允许线程：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>没数据时睡眠
+</span></span><span style="display:flex;"><span>有数据后被唤醒
+</span></span></code></pre></div><p>定义：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">pthread_cond_t</span> cond <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>    PTHREAD_COND_INITIALIZER;
+</span></span></code></pre></div><p>等待：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">pthread_cond_wait</span>(<span style="color:#f92672">&amp;</span>cond, <span style="color:#f92672">&amp;</span>mutex);
+</span></span></code></pre></div><p>唤醒：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">pthread_cond_signal</span>(<span style="color:#f92672">&amp;</span>cond);
+</span></span></code></pre></div><hr>
+<h1 id="21-条件变量标准模板">21. 条件变量标准模板<a hidden class="anchor" aria-hidden="true" href="#21-条件变量标准模板">#</a></h1>
+<p>消费者：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">pthread_mutex_lock</span>(<span style="color:#f92672">&amp;</span>mutex);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span>(<span style="color:#f92672">!</span>ready)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pthread_cond_wait</span>(
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&amp;</span>cond,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&amp;</span>mutex
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">处理数据</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pthread_mutex_unlock</span>(<span style="color:#f92672">&amp;</span>mutex);
+</span></span></code></pre></div><p>生产者：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">pthread_mutex_lock</span>(<span style="color:#f92672">&amp;</span>mutex);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">修改共享数据</span>;
+</span></span><span style="display:flex;"><span>ready <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pthread_cond_signal</span>(<span style="color:#f92672">&amp;</span>cond);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pthread_mutex_unlock</span>(<span style="color:#f92672">&amp;</span>mutex);
+</span></span></code></pre></div><p>注意：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>通常使用 while，而不是 if
+</span></span></code></pre></div><p>因为线程被唤醒后要重新检查条件。</p>
+<hr>
+<h1 id="22-semaphore-信号量">22. Semaphore 信号量<a hidden class="anchor" aria-hidden="true" href="#22-semaphore-信号量">#</a></h1>
+<p>信号量可以理解为：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>带计数功能的同步工具
+</span></span></code></pre></div><p>例如资源数量为 2：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">sem_init</span>(<span style="color:#f92672">&amp;</span>sem, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">2</span>);
+</span></span></code></pre></div><p>等待资源：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">sem_wait</span>(<span style="color:#f92672">&amp;</span>sem);
+</span></span></code></pre></div><p>释放资源：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">sem_post</span>(<span style="color:#f92672">&amp;</span>sem);
+</span></span></code></pre></div><p>头文件：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;semaphore.h&gt;</span><span style="color:#75715e">
+</span></span></span></code></pre></div><hr>
+<h1 id="23-mutex-与-semaphore">23. Mutex 与 Semaphore<a hidden class="anchor" aria-hidden="true" href="#23-mutex-与-semaphore">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Mutex
+</span></span><span style="display:flex;"><span>→ 强调互斥
+</span></span><span style="display:flex;"><span>→ 通常一次一个线程
+</span></span><span style="display:flex;"><span>→ 通常谁加锁谁解锁
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Semaphore
+</span></span><span style="display:flex;"><span>→ 强调计数/同步
+</span></span><span style="display:flex;"><span>→ 可以允许 N 个线程同时进入
+</span></span><span style="display:flex;"><span>→ 可以用来做线程通知
+</span></span></code></pre></div><hr>
+<h1 id="24-共享内存">24. 共享内存<a hidden class="anchor" aria-hidden="true" href="#24-共享内存">#</a></h1>
+<p>进程默认不能直接共享普通变量。</p>
+<p>如果需要高速交换大量数据，可以使用：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Shared Memory
+</span></span></code></pre></div><p>结构：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>进程 A
+</span></span><span style="display:flex;"><span>    \
+</span></span><span style="display:flex;"><span>     Shared Memory
+</span></span><span style="display:flex;"><span>    /
+</span></span><span style="display:flex;"><span>进程 B
+</span></span></code></pre></div><p>常见 API：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">shm_open</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ftruncate</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">mmap</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">munmap</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">shm_unlink</span>()
+</span></span></code></pre></div><p>流程：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>shm_open
+</span></span><span style="display:flex;"><span>↓
+</span></span><span style="display:flex;"><span>ftruncate
+</span></span><span style="display:flex;"><span>↓
+</span></span><span style="display:flex;"><span>mmap
+</span></span><span style="display:flex;"><span>↓
+</span></span><span style="display:flex;"><span>读写内存
+</span></span><span style="display:flex;"><span>↓
+</span></span><span style="display:flex;"><span>munmap
+</span></span></code></pre></div><p>共享内存只解决：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>能否看到同一份数据
+</span></span></code></pre></div><p>它不自动解决：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>谁先读
+</span></span><span style="display:flex;"><span>谁先写
+</span></span><span style="display:flex;"><span>同时修改怎么办
+</span></span></code></pre></div><p>所以常常还要配合同步机制。</p>
+<hr>
+<h1 id="25-网络基础ip-和端口">25. 网络基础：IP 和端口<a hidden class="anchor" aria-hidden="true" href="#25-网络基础ip-和端口">#</a></h1>
+<p>例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>127.0.0.1:8888
+</span></span></code></pre></div><p>其中：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>127.0.0.1 → 本机 IP
+</span></span><span style="display:flex;"><span>8888      → 端口
+</span></span></code></pre></div><p>可以理解：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>IP   → 找机器
+</span></span><span style="display:flex;"><span>Port → 找机器上的程序
+</span></span></code></pre></div><hr>
+<h1 id="26-tcp-与-udp">26. TCP 与 UDP<a hidden class="anchor" aria-hidden="true" href="#26-tcp-与-udp">#</a></h1>
+<h2 id="tcp">TCP<a hidden class="anchor" aria-hidden="true" href="#tcp">#</a></h2>
+<p>特点：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>面向连接
+</span></span><span style="display:flex;"><span>可靠
+</span></span><span style="display:flex;"><span>有序
+</span></span><span style="display:flex;"><span>丢失可重传
+</span></span></code></pre></div><p>适合：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>SSH
+</span></span><span style="display:flex;"><span>HTTP
+</span></span><span style="display:flex;"><span>文件传输
+</span></span><span style="display:flex;"><span>控制命令
+</span></span></code></pre></div><h2 id="udp">UDP<a hidden class="anchor" aria-hidden="true" href="#udp">#</a></h2>
+<p>特点：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>无连接
+</span></span><span style="display:flex;"><span>开销小
+</span></span><span style="display:flex;"><span>速度快
+</span></span><span style="display:flex;"><span>不保证送达
+</span></span><span style="display:flex;"><span>不保证顺序
+</span></span></code></pre></div><p>适合：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>实时音视频
+</span></span><span style="display:flex;"><span>广播
+</span></span><span style="display:flex;"><span>部分传感器数据
+</span></span></code></pre></div><hr>
+<h1 id="27-socket">27. Socket<a hidden class="anchor" aria-hidden="true" href="#27-socket">#</a></h1>
+<p>Socket 是 Linux 的网络编程接口。</p>
+<p>创建：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">socket</span>(...);
+</span></span></code></pre></div><p>注意：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Socket 最终也是一个 fd
+</span></span></code></pre></div><p>所以：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>普通文件 → fd
+</span></span><span style="display:flex;"><span>Socket   → fd
+</span></span><span style="display:flex;"><span>Pipe     → fd
+</span></span></code></pre></div><p>很多情况下都可以：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">read</span>(fd, ...)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">write</span>(fd, ...)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">close</span>(fd)
+</span></span></code></pre></div><hr>
+<h1 id="28-tcp-server-流程">28. TCP Server 流程<a hidden class="anchor" aria-hidden="true" href="#28-tcp-server-流程">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>socket
+</span></span><span style="display:flex;"><span>  ↓
+</span></span><span style="display:flex;"><span>bind
+</span></span><span style="display:flex;"><span>  ↓
+</span></span><span style="display:flex;"><span>listen
+</span></span><span style="display:flex;"><span>  ↓
+</span></span><span style="display:flex;"><span>accept
+</span></span><span style="display:flex;"><span>  ↓
+</span></span><span style="display:flex;"><span>read/write
+</span></span><span style="display:flex;"><span>  ↓
+</span></span><span style="display:flex;"><span>close
+</span></span></code></pre></div><p>TCP Client：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>socket
+</span></span><span style="display:flex;"><span>  ↓
+</span></span><span style="display:flex;"><span>connect
+</span></span><span style="display:flex;"><span>  ↓
+</span></span><span style="display:flex;"><span>read/write
+</span></span><span style="display:flex;"><span>  ↓
+</span></span><span style="display:flex;"><span>close
+</span></span></code></pre></div><hr>
+<h1 id="29-tcp-server-示例">29. TCP Server 示例<a hidden class="anchor" aria-hidden="true" href="#29-tcp-server-示例">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;unistd.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;arpa/inet.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/socket.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> server_fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">socket</span>(
+</span></span><span style="display:flex;"><span>        AF_INET,
+</span></span><span style="display:flex;"><span>        SOCK_STREAM,
+</span></span><span style="display:flex;"><span>        <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(server_fd <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;socket&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">struct</span> sockaddr_in addr <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    addr.sin_family <span style="color:#f92672">=</span> AF_INET;
+</span></span><span style="display:flex;"><span>    addr.sin_addr.s_addr <span style="color:#f92672">=</span> <span style="color:#a6e22e">htonl</span>(INADDR_ANY);
+</span></span><span style="display:flex;"><span>    addr.sin_port <span style="color:#f92672">=</span> <span style="color:#a6e22e">htons</span>(<span style="color:#ae81ff">8888</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">bind</span>(
+</span></span><span style="display:flex;"><span>        server_fd,
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">struct</span> sockaddr <span style="color:#f92672">*</span>)<span style="color:#f92672">&amp;</span>addr,
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">sizeof</span>(addr)
+</span></span><span style="display:flex;"><span>    ) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;bind&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">listen</span>(server_fd, <span style="color:#ae81ff">5</span>) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;listen&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;listening on 8888...</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> client_fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">accept</span>(
+</span></span><span style="display:flex;"><span>        server_fd,
+</span></span><span style="display:flex;"><span>        NULL,
+</span></span><span style="display:flex;"><span>        NULL
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(client_fd <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;accept&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">1024</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">ssize_t</span> n <span style="color:#f92672">=</span> <span style="color:#a6e22e">read</span>(
+</span></span><span style="display:flex;"><span>        client_fd,
+</span></span><span style="display:flex;"><span>        buf,
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">sizeof</span>(buf) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(n <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        buf[n] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;client: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, buf);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>reply <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;hello client&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">write</span>(
+</span></span><span style="display:flex;"><span>        client_fd,
+</span></span><span style="display:flex;"><span>        reply,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">strlen</span>(reply)
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">close</span>(client_fd);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">close</span>(server_fd);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<h1 id="30-tcp-client-示例">30. TCP Client 示例<a hidden class="anchor" aria-hidden="true" href="#30-tcp-client-示例">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;unistd.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;arpa/inet.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/socket.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">socket</span>(
+</span></span><span style="display:flex;"><span>        AF_INET,
+</span></span><span style="display:flex;"><span>        SOCK_STREAM,
+</span></span><span style="display:flex;"><span>        <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">struct</span> sockaddr_in server <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    server.sin_family <span style="color:#f92672">=</span> AF_INET;
+</span></span><span style="display:flex;"><span>    server.sin_port <span style="color:#f92672">=</span> <span style="color:#a6e22e">htons</span>(<span style="color:#ae81ff">8888</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">inet_pton</span>(
+</span></span><span style="display:flex;"><span>        AF_INET,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;127.0.0.1&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&amp;</span>server.sin_addr
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">connect</span>(
+</span></span><span style="display:flex;"><span>        fd,
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">struct</span> sockaddr <span style="color:#f92672">*</span>)<span style="color:#f92672">&amp;</span>server,
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">sizeof</span>(server)
+</span></span><span style="display:flex;"><span>    ) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;connect&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>msg <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;hello server&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">write</span>(fd, msg, <span style="color:#a6e22e">strlen</span>(msg));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">1024</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">ssize_t</span> n <span style="color:#f92672">=</span> <span style="color:#a6e22e">read</span>(
+</span></span><span style="display:flex;"><span>        fd,
+</span></span><span style="display:flex;"><span>        buf,
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">sizeof</span>(buf) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(n <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        buf[n] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;server: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, buf);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">close</span>(fd);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>终端 1：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc server.c -o server
+</span></span><span style="display:flex;"><span>./server
+</span></span></code></pre></div><p>终端 2：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc client.c -o client
+</span></span><span style="display:flex;"><span>./client
+</span></span></code></pre></div><p>查看端口：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ss -lntp | grep <span style="color:#ae81ff">8888</span>
+</span></span></code></pre></div><hr>
+<h1 id="31-udp-流程">31. UDP 流程<a hidden class="anchor" aria-hidden="true" href="#31-udp-流程">#</a></h1>
+<p>UDP Server：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>socket
+</span></span><span style="display:flex;"><span>↓
+</span></span><span style="display:flex;"><span>bind
+</span></span><span style="display:flex;"><span>↓
+</span></span><span style="display:flex;"><span>recvfrom
+</span></span><span style="display:flex;"><span>↓
+</span></span><span style="display:flex;"><span>sendto
+</span></span></code></pre></div><p>UDP Client：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>socket
+</span></span><span style="display:flex;"><span>↓
+</span></span><span style="display:flex;"><span>sendto
+</span></span><span style="display:flex;"><span>↓
+</span></span><span style="display:flex;"><span>recvfrom
+</span></span></code></pre></div><p>UDP 通常不需要：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>listen
+</span></span><span style="display:flex;"><span>accept
+</span></span></code></pre></div><hr>
+<h1 id="32-阻塞-io">32. 阻塞 IO<a hidden class="anchor" aria-hidden="true" href="#32-阻塞-io">#</a></h1>
+<p>例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">read</span>(fd, buf, <span style="color:#ae81ff">100</span>);
+</span></span></code></pre></div><p>如果没有数据：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>线程会停在 read()
+</span></span></code></pre></div><p>直到数据到来。</p>
+<p>这叫：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Blocking IO
+</span></span></code></pre></div><hr>
+<h1 id="33-为什么需要-io-多路复用">33. 为什么需要 IO 多路复用？<a hidden class="anchor" aria-hidden="true" href="#33-为什么需要-io-多路复用">#</a></h1>
+<p>如果服务器有：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>1000 个客户端
+</span></span></code></pre></div><p>一种方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>每个客户端一个线程
+</span></span></code></pre></div><p>可能就要：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>1000 个线程
+</span></span></code></pre></div><p>这会带来：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>内存开销
+</span></span><span style="display:flex;"><span>线程调度
+</span></span><span style="display:flex;"><span>上下文切换
+</span></span><span style="display:flex;"><span>同步问题
+</span></span></code></pre></div><p>所以 Linux 提供：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>select
+</span></span><span style="display:flex;"><span>poll
+</span></span><span style="display:flex;"><span>epoll
+</span></span></code></pre></div><p>目标：</p>
+<blockquote>
+<p>一个或少量线程，同时等待很多 fd。</p>
+</blockquote>
+<hr>
+<h1 id="34-select">34. select<a hidden class="anchor" aria-hidden="true" href="#34-select">#</a></h1>
+<p>核心思想：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>fd1
+</span></span><span style="display:flex;"><span>fd2
+</span></span><span style="display:flex;"><span>fd3
+</span></span><span style="display:flex;"><span>fd4
+</span></span><span style="display:flex;"><span> ↓
+</span></span><span style="display:flex;"><span>select
+</span></span><span style="display:flex;"><span> ↓
+</span></span><span style="display:flex;"><span>哪些 fd 有数据？
+</span></span></code></pre></div><p>常见：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">FD_ZERO</span>(<span style="color:#f92672">&amp;</span>readfds);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">FD_SET</span>(fd, <span style="color:#f92672">&amp;</span>readfds);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">FD_ISSET</span>(fd, <span style="color:#f92672">&amp;</span>readfds);
+</span></span></code></pre></div><p>基本模板：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>fd_set readfds;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span>(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">FD_ZERO</span>(<span style="color:#f92672">&amp;</span>readfds);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">FD_SET</span>(fd1, <span style="color:#f92672">&amp;</span>readfds);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">FD_SET</span>(fd2, <span style="color:#f92672">&amp;</span>readfds);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> maxfd <span style="color:#f92672">=</span> fd1 <span style="color:#f92672">&gt;</span> fd2 <span style="color:#f92672">?</span> fd1 : fd2;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> ret <span style="color:#f92672">=</span> <span style="color:#a6e22e">select</span>(
+</span></span><span style="display:flex;"><span>        maxfd <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&amp;</span>readfds,
+</span></span><span style="display:flex;"><span>        NULL,
+</span></span><span style="display:flex;"><span>        NULL,
+</span></span><span style="display:flex;"><span>        NULL
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(ret <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;select&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">FD_ISSET</span>(fd1, <span style="color:#f92672">&amp;</span>readfds))
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// fd1 可读
+</span></span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">FD_ISSET</span>(fd2, <span style="color:#f92672">&amp;</span>readfds))
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// fd2 可读
+</span></span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<h1 id="35-select-的缺点">35. select 的缺点<a hidden class="anchor" aria-hidden="true" href="#35-select-的缺点">#</a></h1>
+<p>先掌握三点：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>1. fd 数量通常有限制
+</span></span><span style="display:flex;"><span>2. 每轮都要重新准备 fd 集合
+</span></span><span style="display:flex;"><span>3. 返回后通常要遍历检查多个 fd
+</span></span></code></pre></div><hr>
+<h1 id="36-epoll">36. epoll<a hidden class="anchor" aria-hidden="true" href="#36-epoll">#</a></h1>
+<p>Linux 为大量 fd 提供：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>epoll
+</span></span></code></pre></div><p>三个核心 API：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">epoll_create1</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">epoll_ctl</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">epoll_wait</span>()
+</span></span></code></pre></div><p>思路：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>第一次：
+</span></span><span style="display:flex;"><span>告诉内核我要关注哪些 fd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>以后：
+</span></span><span style="display:flex;"><span>epoll_wait 等待
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>内核：
+</span></span><span style="display:flex;"><span>直接返回发生事件的 fd
+</span></span></code></pre></div><hr>
+<h1 id="37-epoll-基本模板">37. epoll 基本模板<a hidden class="anchor" aria-hidden="true" href="#37-epoll-基本模板">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/epoll.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> epfd <span style="color:#f92672">=</span> <span style="color:#a6e22e">epoll_create1</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> epoll_event ev;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ev.events <span style="color:#f92672">=</span> EPOLLIN;
+</span></span><span style="display:flex;"><span>ev.data.fd <span style="color:#f92672">=</span> listen_fd;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">epoll_ctl</span>(
+</span></span><span style="display:flex;"><span>    epfd,
+</span></span><span style="display:flex;"><span>    EPOLL_CTL_ADD,
+</span></span><span style="display:flex;"><span>    listen_fd,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&amp;</span>ev
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> epoll_event events[<span style="color:#ae81ff">64</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span>(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> n <span style="color:#f92672">=</span> <span style="color:#a6e22e">epoll_wait</span>(
+</span></span><span style="display:flex;"><span>        epfd,
+</span></span><span style="display:flex;"><span>        events,
+</span></span><span style="display:flex;"><span>        <span style="color:#ae81ff">64</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> n; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">int</span> fd <span style="color:#f92672">=</span> events[i].data.fd;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(fd <span style="color:#f92672">==</span> listen_fd)
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// accept 新客户端
+</span></span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// read 客户端数据
+</span></span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<h1 id="38-select-与-epoll-区别">38. select 与 epoll 区别<a hidden class="anchor" aria-hidden="true" href="#38-select-与-epoll-区别">#</a></h1>
+<table>
+	<thead>
+			<tr>
+					<th>项目</th>
+					<th>select</th>
+					<th>epoll</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>学习难度</td>
+					<td>较低</td>
+					<td>稍高</td>
+			</tr>
+			<tr>
+					<td>平台</td>
+					<td>多平台</td>
+					<td>Linux</td>
+			</tr>
+			<tr>
+					<td>fd 数量</td>
+					<td>通常有限制</td>
+					<td>更适合大量连接</td>
+			</tr>
+			<tr>
+					<td>每轮重新传 fd 集合</td>
+					<td>是</td>
+					<td>通常不需要</td>
+			</tr>
+			<tr>
+					<td>是否常遍历大量 fd</td>
+					<td>是</td>
+					<td>主要处理就绪事件</td>
+			</tr>
+			<tr>
+					<td>高并发</td>
+					<td>一般</td>
+					<td>更适合</td>
+			</tr>
+	</tbody>
+</table>
+<p>可以这样理解：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>select：
+</span></span><span style="display:flex;"><span>“这 1000 个人里谁举手了？”
+</span></span><span style="display:flex;"><span>然后自己一个个检查。
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>epoll：
+</span></span><span style="display:flex;"><span>先登记这 1000 个人，
+</span></span><span style="display:flex;"><span>系统直接告诉你：
+</span></span><span style="display:flex;"><span>“3号、27号、811号举手了。”
+</span></span></code></pre></div><hr>
+<h1 id="39-lt-与-et">39. LT 与 ET<a hidden class="anchor" aria-hidden="true" href="#39-lt-与-et">#</a></h1>
+<p>epoll 常见：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>LT
+</span></span><span style="display:flex;"><span>ET
+</span></span></code></pre></div><p>LT：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Level Triggered
+</span></span></code></pre></div><p>默认模式。</p>
+<p>只要 fd 仍然可读，就会继续提醒。</p>
+<p>ET：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Edge Triggered
+</span></span></code></pre></div><p>通常需要配合：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>非阻塞 IO
+</span></span></code></pre></div><p>并一直读取到：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>EAGAIN
+</span></span></code></pre></div><p>初学阶段：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>先掌握 LT
+</span></span><span style="display:flex;"><span>再学 ET
+</span></span></code></pre></div><hr>
+<h1 id="40-最重要的一张总结图">40. 最重要的一张总结图<a hidden class="anchor" aria-hidden="true" href="#40-最重要的一张总结图">#</a></h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>                 Linux 文件描述符 fd
+</span></span><span style="display:flex;"><span>                         │
+</span></span><span style="display:flex;"><span>        ┌────────────────┼───────────────┐
+</span></span><span style="display:flex;"><span>        │                │               │
+</span></span><span style="display:flex;"><span>     普通文件          Socket          Pipe
+</span></span><span style="display:flex;"><span>        │                │
+</span></span><span style="display:flex;"><span> open/read/write   socket/read/write
+</span></span><span style="display:flex;"><span>        │                │
+</span></span><span style="display:flex;"><span>        └──────────┬─────┘
+</span></span><span style="display:flex;"><span>                   │
+</span></span><span style="display:flex;"><span>             select / epoll
+</span></span><span style="display:flex;"><span>                   │
+</span></span><span style="display:flex;"><span>              监控多个 fd
+</span></span></code></pre></div>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="next" href="http://localhost:1313/posts/embodied-ai/">
+    <span class="title">Next »</span>
+    <span>Embodied AI</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Wenxu Zheng</a></span> · 
+
+    
+    
+    <span>
+        Powered by
+        <a href="https://gohugo.io/?utm_source=papermod" rel="noopener" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" id="top-link" class="top-link hidden" aria-label="go to top" title="Go to Top (Alt + G)" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevrons-up">
+        <polyline points="17 11 12 6 7 11"></polyline>
+        <polyline points="17 18 12 13 7 18"></polyline>
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var toplink = document.getElementById("top-link");
+    window.onscroll = function () {
+        const scrollThreshold = window.innerHeight;
+        if (document.body.scrollTop > scrollThreshold || document.documentElement.scrollTop > scrollThreshold) {
+            toplink.classList.remove("hidden");
+        } else {
+            toplink.classList.add("hidden");
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

@@ -13,7 +13,7 @@
       <link>http://localhost:1313/posts/transformer/</link>
       <pubDate>Tue, 15 Sep 2026 00:00:00 +0000</pubDate>
       <guid>http://localhost:1313/posts/transformer/</guid>
-      <description>&lt;h1 id=&#34;什么是注意力机制&#34;&gt;什么是注意力机制&lt;/h1&gt;
+      <description>&lt;h1 id=&#34;什么是注意力机制&#34;&gt;什么是注意力机制？&lt;/h1&gt;
 $$
 \mathrm{Attention}(Q,K,V) =
 \mathrm{softmax}
@@ -47,7 +47,57 @@ $$$$
 K=XW_K
 $$$$
 V=XW_V
-$$</description>
+$$&lt;p&gt;$X$是原始信息，$W_K、W_V、W_Q$是三个不同观察方式，$Q$：我想找什么特征、$K$：我有什么特征可以被别人找到、$V$：我要传递什么信息，$d_k$是特征的维度。&lt;/p&gt;
+$$
+\mathrm{Attention}(Q,K,V) =
+\mathrm{softmax}
+\left(
+\frac{(XW_Q)(XW_K)^T}{\sqrt{d_k}}
+\right)V = 
+\mathrm{softmax}
+\left(
+\frac{X(W_Q{W_K}^T)X^T}{\sqrt{d_k}}
+\right)V 
+$$&lt;p&gt;令 $M=W_QW_K^T$，则注意力机制可以表示为：&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title></title>
+      <link>http://localhost:1313/posts/linux%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/linux%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B/</guid>
+      <description>&lt;p&gt;Linux 系统编程&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;适合：已经安装好 WSL2，但没系统学过 Linux、嵌入式或计算机系统的初学者。&lt;br&gt;
+环境：Windows + WSL2 + Ubuntu。&lt;br&gt;
+目标：掌握文件 IO、系统调用、进程/线程、互斥锁、信号量、共享内存、条件变量、死锁、TCP/UDP Socket、&lt;code&gt;select&lt;/code&gt; 和 &lt;code&gt;epoll&lt;/code&gt;。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;1-学习路线&#34;&gt;1. 学习路线&lt;/h1&gt;
+&lt;p&gt;建议按这个顺序学习：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Linux 基本命令
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ C + GCC
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ 文件描述符 fd
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ 标准 IO / 系统调用
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ open/read/write/close
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ 进程
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ 线程
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ mutex
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ 条件变量
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ semaphore
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ 共享内存
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ 死锁
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ TCP/UDP
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ socket
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ select
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;→ epoll
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;hr&gt;
+&lt;h1 id=&#34;2-准备-wsl2-开发环境&#34;&gt;2. 准备 WSL2 开发环境&lt;/h1&gt;
+&lt;p&gt;打开 Ubuntu，或者 PowerShell 输入：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;&#34;&gt;&lt;code class=&#34;language-powershell&#34; data-lang=&#34;powershell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;wsl
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;进入 WSL 后：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo apt update
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo apt install -y build-essential gdb vim nano tree strace lsof net-tools
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;检查：&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

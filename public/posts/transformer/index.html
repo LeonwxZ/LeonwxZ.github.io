@@ -31,8 +31,7 @@ q_1k_1^T & q_1k_2^T & q_1k_3^T\\
 q_2k_1^T & q_2k_2^T & q_2k_3^T\\
 q_3k_1^T & q_3k_2^T & q_3k_3^T
 \end{bmatrix}
-$$Q、K、V从哪里来？
-Transformer里面有三个可训练矩阵：
+$$Transformer里面有三个可训练矩阵：
 $$
 W_Q,\ W_K,\ W_V
 $$然后：
@@ -42,7 +41,7 @@ $$$$
 K=XW_K
 $$$$
 V=XW_V
-$$$X$是原始信息，$W_K、W_V、W_Q$是三个不同观察方式，$Q$：我想找什么、$K$：我有什么特征可以被别人找到、$V$：我要传递什么信息。
+$$$X$是原始信息，$W_K、W_V、W_Q$是三个不同观察方式，$Q$：我想找什么特征、$K$：我有什么特征可以被别人找到、$V$：我要传递什么信息，$d_k$是特征的维度。
 $$
 \mathrm{Attention}(Q,K,V) =
 \mathrm{softmax}
@@ -51,9 +50,9 @@ $$
 \right)V = 
 \mathrm{softmax}
 \left(
-\frac{XW_Q{W_K}^TX^T}{\sqrt{d_k}}
+\frac{X(W_Q{W_K}^T)X^T}{\sqrt{d_k}}
 \right)V 
-$$">
+$$令 $M=W_QW_K^T$，则注意力机制可以表示为：">
 <meta name="author" content="">
 <link rel="canonical" href="http://localhost:1313/posts/transformer/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.537afd525c5732ed7686706ecaad11b228f380fc589c2bd102c204f37b3c28ce.css" integrity="sha256-U3r9UlxXMu12hnBuyq0RsijzgPxYnCvRAsIE83s8KM4=" rel="preload stylesheet" as="style">
@@ -213,8 +212,7 @@ q_1k_1^T & q_1k_2^T & q_1k_3^T\\
 q_2k_1^T & q_2k_2^T & q_2k_3^T\\
 q_3k_1^T & q_3k_2^T & q_3k_3^T
 \end{bmatrix}
-$$<h1 id="qkv从哪里来">Q、K、V从哪里来？<a hidden class="anchor" aria-hidden="true" href="#qkv从哪里来">#</a></h1>
-<p>Transformer里面有三个可训练矩阵：</p>
+$$<p>Transformer里面有三个可训练矩阵：</p>
 $$
 W_Q,\ W_K,\ W_V
 $$<p>然后：</p>
@@ -224,7 +222,7 @@ $$$$
 K=XW_K
 $$$$
 V=XW_V
-$$<p>$X$是原始信息，$W_K、W_V、W_Q$是三个不同观察方式，$Q$：我想找什么、$K$：我有什么特征可以被别人找到、$V$：我要传递什么信息。</p>
+$$<p>$X$是原始信息，$W_K、W_V、W_Q$是三个不同观察方式，$Q$：我想找什么特征、$K$：我有什么特征可以被别人找到、$V$：我要传递什么信息，$d_k$是特征的维度。</p>
 $$
 \mathrm{Attention}(Q,K,V) =
 \mathrm{softmax}
@@ -233,15 +231,29 @@ $$
 \right)V = 
 \mathrm{softmax}
 \left(
-\frac{XW_Q{W_K}^TX^T}{\sqrt{d_k}}
+\frac{X(W_Q{W_K}^T)X^T}{\sqrt{d_k}}
 \right)V 
+$$<p>令 $M=W_QW_K^T$，则注意力机制可以表示为：</p>
 $$
+\mathrm{Attention}(Q,K,V) =
+\mathrm{softmax}
+\left(
+\frac{XMX^T}{\sqrt{d_k}}
+\right)V
+$$<p>从该形式可以看出，注意力机制本质上是在学习一个通用的$\textbf{特征关系映射规则} M$，用于衡量不同输入单元之间的相关性。对于给定的输入序列$X$，模型通过计算 $XMX^T$ 动态评估各个单元之间的关联程度，并生成针对当前上下文的注意力权重，从而实现信息的自适应聚合。</p>
+
 
   </div>
 
   <footer class="post-footer">
     <ul class="post-tags">
     </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/posts/linux%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B/">
+    <span class="title">« Prev</span>
+    <span>Linux 系统编程</span>
+  </a>
+</nav>
 
   </footer>
 </article>

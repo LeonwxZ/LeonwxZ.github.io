@@ -1,5 +1,5 @@
 ---
-title: "Transformer"
+title: "Embodied AI"
 date: 2026-09-15
 math: true
 ---
@@ -34,8 +34,6 @@ q_3k_1^T & q_3k_2^T & q_3k_3^T
 \end{bmatrix}
 $$
 
-# Q、K、V从哪里来？
-
 Transformer里面有三个可训练矩阵：
 
 $$
@@ -66,7 +64,19 @@ $$
 \right)V = 
 \mathrm{softmax}
 \left(
-\frac{XW_Q{W_K}^TX^T}{\sqrt{d_k}}
+\frac{X(W_Q{W_K}^T)X^T}{\sqrt{d_k}}
 \right)V 
 $$
+
+令 $M=W_QW_K^T$，则注意力机制可以表示为：
+
+$$
+\mathrm{Attention}(Q,K,V) =
+\mathrm{softmax}
+\left(
+\frac{XMX^T}{\sqrt{d_k}}
+\right)V
+$$
+
+从该形式可以看出，注意力机制本质上是在学习一个通用的$\textbf{特征关系映射规则} M$，用于衡量不同输入单元之间的相关性。对于给定的输入序列$X$，模型通过计算 $XMX^T$ 动态评估各个单元之间的关联程度，并生成针对当前上下文的注意力权重，从而实现信息的自适应聚合。
 
