@@ -2,6 +2,7 @@
 title: "Linux System Programming"
 date: 2026-09-20
 math: true
+draft: true
 ---
 
 > 适合：已经安装好 WSL2，但没系统学过 Linux、嵌入式或计算机系统的初学者。  
@@ -11,11 +12,8 @@ math: true
 ---
 
 # 1. 学习路线
-
-建议按这个顺序学习：
-
 ```text
-Linux 基本命令
+→ Linux 基本命令
 → C + GCC
 → 文件描述符 fd
 → 标准 IO / 系统调用
@@ -136,6 +134,12 @@ int main()
 ```bash
 gcc -Wall -Wextra -g hello.c -o hello
 ```
+其中：
+```text
+-Wall   打开常见警告
+-Wextra 打开更多警告
+-g      加入 GDB 调试信息
+```
 
 运行：
 
@@ -143,19 +147,7 @@ gcc -Wall -Wextra -g hello.c -o hello
 ./hello
 ```
 
-以后建议统一这样编译：
 
-```bash
-gcc -Wall -Wextra -g main.c -o main
-```
-
-其中：
-
-```text
--Wall   打开常见警告
--Wextra 打开更多警告
--g      加入 GDB 调试信息
-```
 
 ---
 
@@ -459,7 +451,7 @@ int main()
 
 ---
 
-# 10. 必做项目：文件复制器
+# 10. 文件复制器
 
 目标：
 
@@ -489,6 +481,30 @@ write(dst)
 close
 ```
 
+```c
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+int main(int argc, char *argv[]){
+
+        char *s1 = argv[1];
+        char *s2 = argv[2];
+        printf("%s\n%s", s1, s2);
+
+        int fd_1 = open(s1, O_RDONLY);
+        int fd_2 = open(s2, O_WRONLY|O_TRUNC);
+
+        char buf[128];
+        ssize_t n;
+        while(n =  read(fd_1, buf, sizeof(buf) - 1))
+        {
+                write(fd_2, buf, n);
+        };
+
+        return 0;
+}
+```
 ---
 
 # 11. 进程

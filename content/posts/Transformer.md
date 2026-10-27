@@ -1,7 +1,8 @@
 ---
-title: "Embodied AI"
+title: "Transformer"
 date: 2026-09-15
 math: true
+draft: true
 ---
 # 什么是注意力机制？
 
